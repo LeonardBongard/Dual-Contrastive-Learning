@@ -41,28 +41,48 @@ def my_collate(batch, tokenizer, method, num_classes):
 
 
 def load_data(dataset, data_dir, tokenizer, train_batch_size, test_batch_size, model_name, method, workers):
-    if dataset == 'sst2':
-        train_data = json.load(open(os.path.join(data_dir, 'SST2_Train.json'), 'r', encoding='utf-8'))
-        test_data = json.load(open(os.path.join(data_dir, 'SST2_Test.json'), 'r', encoding='utf-8'))
-        label_dict = {'positive': 0, 'negative': 1}
-    elif dataset == 'trec':
-        train_data = json.load(open(os.path.join(data_dir, 'TREC_Train.json'), 'r', encoding='utf-8'))
-        test_data = json.load(open(os.path.join(data_dir, 'TREC_Test.json'), 'r', encoding='utf-8'))
-        label_dict = {'description': 0, 'entity': 1, 'abbreviation': 2, 'human': 3, 'location': 4, 'numeric': 5}
-    elif dataset == 'cr':
-        train_data = json.load(open(os.path.join(data_dir, 'CR_Train.json'), 'r', encoding='utf-8'))
-        test_data = json.load(open(os.path.join(data_dir, 'CR_Test.json'), 'r', encoding='utf-8'))
-        label_dict = {'positive': 0, 'negative': 1}
-    elif dataset == 'subj':
-        train_data = json.load(open(os.path.join(data_dir, 'SUBJ_Train.json'), 'r', encoding='utf-8'))
-        test_data = json.load(open(os.path.join(data_dir, 'SUBJ_Test.json'), 'r', encoding='utf-8'))
-        label_dict = {'subjective': 0, 'objective': 1}
-    elif dataset == 'pc':
-        train_data = json.load(open(os.path.join(data_dir, 'procon_Train.json'), 'r', encoding='utf-8'))
-        test_data = json.load(open(os.path.join(data_dir, 'procon_Test.json'), 'r', encoding='utf-8'))
-        label_dict = {'positive': 0, 'negative': 1}
-    else:
-        raise ValueError('unknown dataset')
+    # if dataset == 'sst2':
+    #     train_data = json.load(open(os.path.join(data_dir, 'SST2_Train.json'), 'r', encoding='utf-8'))
+    #     test_data = json.load(open(os.path.join(data_dir, 'SST2_Test.json'), 'r', encoding='utf-8'))
+    #     label_dict = {'positive': 0, 'negative': 1}
+    # elif dataset == 'trec':
+    #     train_data = json.load(open(os.path.join(data_dir, 'TREC_Train.json'), 'r', encoding='utf-8'))
+    #     test_data = json.load(open(os.path.join(data_dir, 'TREC_Test.json'), 'r', encoding='utf-8'))
+    #     label_dict = {'description': 0, 'entity': 1, 'abbreviation': 2, 'human': 3, 'location': 4, 'numeric': 5}
+    # elif dataset == 'cr':
+    #     train_data = json.load(open(os.path.join(data_dir, 'CR_Train.json'), 'r', encoding='utf-8'))
+    #     test_data = json.load(open(os.path.join(data_dir, 'CR_Test.json'), 'r', encoding='utf-8'))
+    #     label_dict = {'positive': 0, 'negative': 1}
+    # elif dataset == 'subj':
+    #     train_data = json.load(open(os.path.join(data_dir, 'SUBJ_Train.json'), 'r', encoding='utf-8'))
+    #     test_data = json.load(open(os.path.join(data_dir, 'SUBJ_Test.json'), 'r', encoding='utf-8'))
+    #     label_dict = {'subjective': 0, 'objective': 1}
+    # elif dataset == 'pc':
+    #     train_data = json.load(open(os.path.join(data_dir, 'procon_Train.json'), 'r', encoding='utf-8'))
+    #     test_data = json.load(open(os.path.join(data_dir, 'procon_Test.json'), 'r', encoding='utf-8'))
+    #     label_dict = {'positive': 0, 'negative': 1}
+    # else:
+    #     raise ValueError('unknown dataset')
+
+
+    path = "/home/leo/Projects/PythonProjects/hiwi_legal/data/done/contrastive_learning/pos_samples_are_questions_with_dissenting_judges_neg_samples_are_questions_not_dissenting_judges/triplet_data.csv"
+
+    with open(path, "r") as f:
+        lines = f.readlines()
+        lines = [line.strip().split("\t") for line in lines]
+    
+    prepared_data = []
+    for line in lines:
+        prepared_data.append({"text": line[1], "label": "positive"})
+        prepared_data.append({"text": line[2], "label": "negative"})
+    
+    train_data = prepared_data[:int(len(prepared_data)*0.8)]
+    test_data = prepared_data[int(len(prepared_data)*0.8):int(len(prepared_data)*0.9)]
+    secret_test_data = prepared_data[int(len(prepared_data)*0.9):]
+
+    label_dict = {'positive': 0, 'negative': 1}
+
+
     trainset = MyDataset(train_data, label_dict, tokenizer, model_name, method)
     testset = MyDataset(test_data, label_dict, tokenizer, model_name, method)
     collate_fn = partial(my_collate, tokenizer=tokenizer, method=method, num_classes=len(label_dict))
